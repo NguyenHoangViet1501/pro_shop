@@ -69,9 +69,26 @@ services:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/rules/alerts.yml:ro
       - prometheus_data:/prometheus
     depends_on:
       - node-exporter
+      - alertmanager
+    networks:
+      - proshop_network
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: proshop_alertmanager
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
     networks:
       - proshop_network
 
@@ -118,6 +135,26 @@ services:
     networks:
       - proshop_network
 
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: proshop_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - proshop_network
+
 volumes:
   mongo_data:
   uploads_data:
@@ -126,6 +163,8 @@ volumes:
   prometheus_data:
   loki_data:
   nginx_logs:
+  alertmanager_data:
+  grafana_data:
 
 networks:
   proshop_network:
