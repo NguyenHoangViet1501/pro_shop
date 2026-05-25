@@ -39,12 +39,27 @@ services:
       - backend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
+    networks:
+      - proshop_network
+
+  certbot:
+    image: certbot/certbot
+    container_name: proshop_certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
     networks:
       - proshop_network
 
 volumes:
   mongo_data:
   uploads_data:
+  certbot_www:
+  letsencrypt:
 
 networks:
   proshop_network:
