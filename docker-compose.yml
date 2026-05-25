@@ -43,6 +43,7 @@ services:
     volumes:
       - certbot_www:/var/www/certbot
       - letsencrypt:/etc/letsencrypt
+      - nginx_logs:/var/log/nginx/proshop
     networks:
       - proshop_network
 
@@ -88,12 +89,43 @@ services:
     networks:
       - proshop_network
 
+  loki:
+    image: grafana/loki:2.9.10
+    container_name: proshop_loki
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    expose:
+      - "3100"
+    volumes:
+      - loki_data:/loki
+    networks:
+      - proshop_network
+
+  promtail:
+    image: grafana/promtail:2.9.10
+    container_name: proshop_promtail
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./monitoring/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - nginx_logs:/var/log/nginx/proshop:ro
+    depends_on:
+      - loki
+      - frontend
+    networks:
+      - proshop_network
+
 volumes:
   mongo_data:
   uploads_data:
   certbot_www:
   letsencrypt:
   prometheus_data:
+  loki_data:
+  nginx_logs:
 
 networks:
   proshop_network:
