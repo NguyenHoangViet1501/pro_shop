@@ -2,7 +2,7 @@ groups:
   - name: ec2-host-alerts
     rules:
       - alert: HighCpuUsage
-        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 85
         for: 0s
         labels:
           severity: warning
